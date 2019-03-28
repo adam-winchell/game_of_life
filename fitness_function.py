@@ -32,6 +32,9 @@ def ff1(data):
 	print(np.max(result))		
 	return np.max(result)/(len(data)-1)
 
+
+#TODO run all the f_i in one fitness function becuase all of them need the result matrix
+
 def ff2(data):
 	score = 0
 	add1 = np.vectorize(lambda x: x+1 if x > 0 else 0)
