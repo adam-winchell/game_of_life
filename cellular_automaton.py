@@ -4,6 +4,7 @@ from matplotlib.colors import ListedColormap
 import imageio
 import os
 import argparse
+import pickle
 
 
 def num_neighbors(grid, i, j):
@@ -26,6 +27,7 @@ def add_neighbors(temp_set, i, j, x_shape, y_shape):
     return temp_set
 
 def plot_grid(game_grid, filename):
+    #plt.figure(figsize=(10,10))
     plt.imshow(game_grid, cmap='binary')
     plt.gca().set_xticks(np.arange(-.5, game_grid.shape[0], 1))
     plt.gca().set_yticks(np.arange(-.5, game_grid.shape[1], 1))
@@ -35,14 +37,16 @@ def plot_grid(game_grid, filename):
 
     plt.savefig(filename)
     plt.clf()
-
+    #plt.close()
     return imageio.imread(filename+'.png')
 
 def game_of_life(game_grid, time_steps, filename, delete_pngs=True):
 
     images = []
     cells_to_update = []
+    #fitness_frames = []
     for step in range(time_steps):
+        #fitness_frames.append(game_grid)
         result = plot_grid(game_grid, filename+str(step))
         images.append(result)
 
@@ -63,13 +67,15 @@ def game_of_life(game_grid, time_steps, filename, delete_pngs=True):
         game_grid = update_grid
         cells_to_update = list(temp)
 
-
     imageio.mimsave(filename+'.gif', images)
 
     if delete_pngs:
         for step in range(time_steps):
             os.remove(filename+str(step)+'.png')
 
+
+    # with open('frames.p','wb') as pFile:
+    #     pickle.dump(fitness_frames,pFile)
 
 
 
@@ -94,12 +100,19 @@ if __name__ == "__main__":
     game_grid = np.zeros((n,n))
 
     #define initial seed
-    game_grid[1,1] = 1
-    game_grid[1,3] = 1
-    game_grid[2,3] = 1
-    game_grid[2,2] = 1
-    game_grid[3,2] = 1
 
+    with open('./seeds/glider.p','rb') as pFile:
+        game_grid = pickle.load(pFile)
+    # for i in range(game_grid.shape[0]):
+    #     for j in range(game_grid.shape[0]):
+    #         if np.random.uniform(0,1) > 0.5:
+    #             game_grid[i,j] = 1
+    
+    # with open('./seeds/penta-decathlon.p','rb') as pFile:
+    #     game_grid = pickle.load(pFile)
+
+    # with open('./seeds/penta-decathlon.p','wb') as pFile:
+    #     pickle.dump(game_grid,pFile)
     if not os.path.isdir('oscillators'):
         os.makedirs('oscillators')
 
