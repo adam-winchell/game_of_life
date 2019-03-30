@@ -85,16 +85,12 @@ def plot_grid(game_grid, filename):
     #plt.close()
     return imageio.imread(filename+'.png')
 
-def game_of_life(game_grid, time_steps, filename, fitness_weights, delete_pngs, gif_on):
+def game_of_life(game_grid, time_steps, filename, fitness_weights):
 
-    images = []
     cells_to_update = []
     fitness_frames = []
     for step in range(time_steps):
         fitness_frames.append(game_grid)
-        if gif_on:
-            result = plot_grid(game_grid, filename+str(step))
-            images.append(result)
 
         update_grid = np.zeros(game_grid.shape)
 
@@ -113,8 +109,38 @@ def game_of_life(game_grid, time_steps, filename, fitness_weights, delete_pngs, 
         game_grid = update_grid
         cells_to_update = list(temp)
 
-    if gif_on:
-        imageio.mimsave(filename+'.gif', images)
+    return fitness(fitness_frames, fitness_weights)
+
+def game_of_life_gif(game_grid, time_steps, filename, fitness_weights, delete_pngs):
+
+    images = []
+    cells_to_update = []
+    fitness_frames = []
+    for step in range(time_steps):
+        fitness_frames.append(game_grid)
+        
+        result = plot_grid(game_grid, filename+str(step))
+        images.append(result)
+
+        update_grid = np.zeros(game_grid.shape)
+
+        if step == 0:
+            cells_to_update = [(i,j) for i in range(game_grid.shape[0]) for j in range(game_grid.shape[1])]   #all cells in the grid are added to be checked because we do not know anything about the cells at the start
+
+        temp = set()
+        for tup in cells_to_update:
+            i, j = tup[0], tup[1]
+            nn = num_neighbors(game_grid, i, j)
+
+            if nn == 3 or (game_grid[i,j] == 1 and nn == 2):
+                update_grid[i, j] = 1
+                temp = add_neighbors(temp, i, j, game_grid.shape[0], game_grid.shape[1])
+
+        game_grid = update_grid
+        cells_to_update = list(temp)
+
+    
+    imageio.mimsave(filename+'.gif', images)
 
     if delete_pngs:
         for step in range(time_steps):
@@ -135,7 +161,7 @@ if __name__ == "__main__":
     parser.add_argument('--timesteps', type=int, default=19,
                         help='number of time steps (default: 19)')
     parser.add_argument('--filename', type=str, default='gliders',
-                        help='filename for oscillator type (default: gliders)')
+                        help='filename for oscillator type (default: glider)')
     parser.add_argument('--deletepngs', type=bool, default=True,
                         help='delete the pngs for each time step (default: True)')
     parser.add_argument('--w1', type=int, default=0.33,
@@ -146,6 +172,8 @@ if __name__ == "__main__":
                         help='weight for fitness function 3')
     parser.add_argument('--gif', type=int, default=1,
                         help='should we create a gif')
+    parser.add_argument('--sfile', type=str, default='glider',
+                        help='filename for seed  (default: glider)')
 
     args = parser.parse_args()
 
@@ -165,6 +193,9 @@ if __name__ == "__main__":
     weights = [args.w1, args.w2, args.w3]
 
     #define initial seed
+    seed = args.sfile
+    with open('./seeds/'+seed+'.p','rb') as pFile:
+        game_grid = pickle.load(pFile)
 
     # with open('./seeds/glider.p','rb') as pFile:
     #     game_grid = pickle.load(pFile)
@@ -173,16 +204,18 @@ if __name__ == "__main__":
     #         if np.random.uniform(0,1) > 0.5:
     #             game_grid[i,j] = 1
     
-    with open('./seeds/penta-decathlon.p','rb') as pFile:
-        game_grid = pickle.load(pFile)
 
     # with open('./seeds/penta-decathlon.p','wb') as pFile:
     #     pickle.dump(game_grid,pFile)
-    if not os.path.isdir('oscillators'):
-        os.makedirs('oscillators')
+    
 
+    if gif_on:
+        if not os.path.isdir('oscillators'):
+            os.makedirs('oscillators')
 
-    fitness = game_of_life(game_grid, time_steps, filename, weights, delete_pngs, gif_on)
+        fitness = game_of_life_gif(game_grid, time_steps, filename, weights, delete_pngs)
+    else:
+        fitness = game_of_life(game_grid, time_steps, filename, weights)
 
     print('Fitness: ',fitness)
 
