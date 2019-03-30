@@ -5,7 +5,52 @@ import imageio
 import os
 import argparse
 import pickle
+from copy import deepcopy
+from scipy.spatial.distance import pdist
+from collections import defaultdict
 
+def fitness(data, weight_vector=[0.33,0.33,0.33]):
+    result = deepcopy(data[0])
+
+    f1, f2 , f3 = -1, -1, -1
+
+    add1 = np.vectorize(lambda x: x+1 if x > 0 else 0)
+    for d in range(1,len(data)):
+        result = add1(result)
+
+        for i in range(data[d].shape[0]):
+            for j in range(data[d].shape[0]):
+                if data[d][i,j] > 0:
+                    result[i,j] = 1
+
+        f1 = max(f1, np.max(result))
+
+        indices = np.transpose(np.nonzero(result))
+
+
+        bins = defaultdict(list)
+        for index in indices:
+            bins[result[index[0], index[1]]].append(index)
+
+        max_oscillating_cells = (-1,-1) #   (key, num oscillating cells)
+        for key, vals in bins.items():
+            if len(vals) > max_oscillating_cells[1]:
+                max_oscillating_cells = (key, len(vals))
+
+
+        if max_oscillating_cells[1] > f2:
+            f2 = max_oscillating_cells[1]
+
+            dist = pdist(bins[max_oscillating_cells[0]])
+            f3 = 1 / (dist.sum()/max_oscillating_cells[1])
+
+
+    #normalize the fitness values to range [0,1]
+    f1 = f1 / (len(data) - 1)
+    f2 = f2 / (result.shape[0]*result.shape[1])
+    #f3 is implicity normalized
+
+    return np.dot(weight_vector, [f1,f2,f3])
 
 def num_neighbors(grid, i, j):
     return grid[(i - 1) % grid.shape[0], j] + grid[(i - 1) % grid.shape[0], (j - 1) % grid.shape[1]] + grid[
@@ -40,15 +85,16 @@ def plot_grid(game_grid, filename):
     #plt.close()
     return imageio.imread(filename+'.png')
 
-def game_of_life(game_grid, time_steps, filename, delete_pngs=True):
+def game_of_life(game_grid, time_steps, filename, fitness_weights, delete_pngs, gif_on):
 
     images = []
     cells_to_update = []
-    #fitness_frames = []
+    fitness_frames = []
     for step in range(time_steps):
-        #fitness_frames.append(game_grid)
-        result = plot_grid(game_grid, filename+str(step))
-        images.append(result)
+        fitness_frames.append(game_grid)
+        if gif_on:
+            result = plot_grid(game_grid, filename+str(step))
+            images.append(result)
 
         update_grid = np.zeros(game_grid.shape)
 
@@ -67,7 +113,8 @@ def game_of_life(game_grid, time_steps, filename, delete_pngs=True):
         game_grid = update_grid
         cells_to_update = list(temp)
 
-    imageio.mimsave(filename+'.gif', images)
+    if gif_on:
+        imageio.mimsave(filename+'.gif', images)
 
     if delete_pngs:
         for step in range(time_steps):
@@ -75,7 +122,9 @@ def game_of_life(game_grid, time_steps, filename, delete_pngs=True):
 
 
     # with open('frames.p','wb') as pFile:
-    #     pickle.dump(fitness_frames,pFile)
+        # pickle.dump(fitness_frames,pFile)
+
+    return fitness(fitness_frames, fitness_weights)
 
 
 
@@ -89,6 +138,14 @@ if __name__ == "__main__":
                         help='filename for oscillator type (default: gliders)')
     parser.add_argument('--deletepngs', type=bool, default=True,
                         help='delete the pngs for each time step (default: True)')
+    parser.add_argument('--w1', type=int, default=0.33,
+                        help='weight for fitness function 1')
+    parser.add_argument('--w2', type=int, default=0.33,
+                        help='weight for fitness function 2')
+    parser.add_argument('--w3', type=int, default=0.33,
+                        help='weight for fitness function 3')
+    parser.add_argument('--gif', type=int, default=1,
+                        help='should we create a gif')
 
     args = parser.parse_args()
 
@@ -96,20 +153,28 @@ if __name__ == "__main__":
     time_steps = args.timesteps
     filename = 'oscillators/' + args.filename
     delete_pngs = args.deletepngs
+    gif_on = args.gif
+
+    if not gif_on:
+        #no pngs to delete
+        delete_pngs = False
+
 
     game_grid = np.zeros((n,n))
 
+    weights = [args.w1, args.w2, args.w3]
+
     #define initial seed
 
-    with open('./seeds/glider.p','rb') as pFile:
-        game_grid = pickle.load(pFile)
+    # with open('./seeds/glider.p','rb') as pFile:
+    #     game_grid = pickle.load(pFile)
     # for i in range(game_grid.shape[0]):
     #     for j in range(game_grid.shape[0]):
     #         if np.random.uniform(0,1) > 0.5:
     #             game_grid[i,j] = 1
     
-    # with open('./seeds/penta-decathlon.p','rb') as pFile:
-    #     game_grid = pickle.load(pFile)
+    with open('./seeds/penta-decathlon.p','rb') as pFile:
+        game_grid = pickle.load(pFile)
 
     # with open('./seeds/penta-decathlon.p','wb') as pFile:
     #     pickle.dump(game_grid,pFile)
@@ -117,7 +182,9 @@ if __name__ == "__main__":
         os.makedirs('oscillators')
 
 
-    game_of_life(game_grid, time_steps, 'oscillators/glider', delete_pngs)
+    fitness = game_of_life(game_grid, time_steps, filename, weights, delete_pngs, gif_on)
+
+    print('Fitness: ',fitness)
 
 
 

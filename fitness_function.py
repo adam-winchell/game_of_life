@@ -100,10 +100,12 @@ def fitness(data, weight_vector=[0.33,0.33,0.33]):
 
 
 	#normalize the fitness values to range [0,1]
-	f1 = f1 / (len(data))
+	f1 = f1 / (len(data) - 1)
 	f2 = f2 / (result.shape[0]*result.shape[1])
 	#f3 is implicity normalized
-	
+	print(f1)
+	print(f2)
+	print(f3)
 	return np.dot(weight_vector, [f1,f2,f3])
 
 
