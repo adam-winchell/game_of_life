@@ -9,7 +9,7 @@ from copy import deepcopy
 from scipy.spatial.distance import pdist
 from collections import defaultdict
 
-def fitness(data, weight_vector=[0.33,0.33,0.33]):
+def fitness(data):
     result = deepcopy(data[0])
 
     f1, f2 , f3 = -1, -1, -1
@@ -49,8 +49,8 @@ def fitness(data, weight_vector=[0.33,0.33,0.33]):
     f1 = f1 / (len(data) - 1)
     f2 = f2 / (result.shape[0]*result.shape[1])
     #f3 is implicity normalized
-
-    return np.dot(weight_vector, [f1,f2,f3])
+    
+    return [f1,f2,f3]
 
 def num_neighbors(grid, i, j):
     return grid[(i - 1) % grid.shape[0], j] + grid[(i - 1) % grid.shape[0], (j - 1) % grid.shape[1]] + grid[
@@ -85,7 +85,7 @@ def plot_grid(game_grid, filename):
     #plt.close()
     return imageio.imread(filename+'.png')
 
-def game_of_life(game_grid, time_steps, filename, fitness_weights):
+def game_of_life(game_grid, time_steps):
 
     cells_to_update = []
     fitness_frames = []
@@ -109,9 +109,9 @@ def game_of_life(game_grid, time_steps, filename, fitness_weights):
         game_grid = update_grid
         cells_to_update = list(temp)
 
-    return fitness(fitness_frames, fitness_weights)
+    return fitness(fitness_frames)
 
-def game_of_life_gif(game_grid, time_steps, filename, fitness_weights, delete_pngs):
+def game_of_life_gif(game_grid, time_steps, filename, delete_pngs):
 
     images = []
     cells_to_update = []
@@ -150,8 +150,39 @@ def game_of_life_gif(game_grid, time_steps, filename, fitness_weights, delete_pn
     # with open('frames.p','wb') as pFile:
         # pickle.dump(fitness_frames,pFile)
 
-    return fitness(fitness_frames, fitness_weights)
+    return fitness(fitness_frames)
 
+def main(n=50, time_steps=3, filename='glider', delete_pngs=True, w1=0.33, w2=0.33, w3=0.33, gif_on=False, seed='glider.p', individual_fitness=True):
+
+    filename = 'oscillators/' + filename
+
+    if not gif_on:
+        #no pngs to delete
+        delete_pngs = False
+
+
+    game_grid = np.zeros((n,n))
+
+    fitness_weights = [w1, w2, w3]
+
+    #define initial seed
+    with open('./seeds/'+seed,'rb') as pFile:
+        game_grid = pickle.load(pFile)
+
+
+    if gif_on:
+        if not os.path.isdir('oscillators'):
+            os.makedirs('oscillators')
+
+        fitness_values = game_of_life_gif(game_grid, time_steps, filename, delete_pngs)
+    else:
+        fitness_values = game_of_life(game_grid, time_steps)
+
+
+    if individual_fitness:
+        return fitness_values
+    else:
+        return np.dot(fitness_weights, fitness_values)
 
 
 if __name__ == "__main__":
@@ -161,7 +192,7 @@ if __name__ == "__main__":
     parser.add_argument('--timesteps', type=int, default=19,
                         help='number of time steps (default: 19)')
     parser.add_argument('--filename', type=str, default='gliders',
-                        help='filename for oscillator type (default: glider)')
+                        help='filename to write to  (default: glider)')
     parser.add_argument('--deletepngs', type=bool, default=True,
                         help='delete the pngs for each time step (default: True)')
     parser.add_argument('--w1', type=int, default=0.33,
@@ -172,8 +203,8 @@ if __name__ == "__main__":
                         help='weight for fitness function 3')
     parser.add_argument('--gif', type=int, default=1,
                         help='should we create a gif')
-    parser.add_argument('--sfile', type=str, default='glider',
-                        help='filename for seed  (default: glider)')
+    parser.add_argument('--seed', type=str, default='glider.p',
+                        help='filename for seed  (default: glider.p)')
 
     args = parser.parse_args()
 
@@ -190,11 +221,10 @@ if __name__ == "__main__":
 
     game_grid = np.zeros((n,n))
 
-    weights = [args.w1, args.w2, args.w3]
+    fitness_weights = [args.w1, args.w2, args.w3]
 
     #define initial seed
-    seed = args.sfile
-    with open('./seeds/'+seed+'.p','rb') as pFile:
+    with open('./seeds/'+seed,'rb') as pFile:
         game_grid = pickle.load(pFile)
 
     # with open('./seeds/glider.p','rb') as pFile:
@@ -213,9 +243,11 @@ if __name__ == "__main__":
         if not os.path.isdir('oscillators'):
             os.makedirs('oscillators')
 
-        fitness = game_of_life_gif(game_grid, time_steps, filename, weights, delete_pngs)
+        fitness_values = game_of_life_gif(game_grid, time_steps, filename, delete_pngs)
     else:
-        fitness = game_of_life(game_grid, time_steps, filename, weights)
+        fitness_values = game_of_life(game_grid, time_steps, filename)
+
+    fitness = np.dot(fitness_values, fitness_weights)
 
     print('Fitness: ',fitness)
 
