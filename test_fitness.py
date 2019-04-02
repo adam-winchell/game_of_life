@@ -11,9 +11,11 @@ if __name__ == "__main__":
 
 	fitnesses = []
 	for filename in files:
-		fitness_values = getattr(ca, 'main')(time_steps=16, gif_on=False, seed=filename, individual_fitness=True)
+		splt = filename.split('_')
+		print(filename)
+		fitness_values = ca.main(time_steps=(int(splt[2])+1), gif_on=False, seed=filename, individual_fitness=True)
 		print(fitness_values)
-		quit()
+
 		#run the oscillator and get it's fitness for each f_i and store this result in fitnesses
 		pass
 
