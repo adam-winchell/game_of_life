@@ -13,24 +13,28 @@ def fitness(data):
     result = deepcopy(data[0])
 
     f1, f2 , f3 = -1, -1, -1
+    #TODO calculate f2 and f3 at the period chosen by f1
+    #TODO f4 perimeter of the oscillator
+    #TODO f5 entropy of the board, smaller is better
 
     add1 = np.vectorize(lambda x: x+1 if x > 0 else 0)
     for d in range(1,len(data)):
+        plt.matshow(result)
+        plt.show()
         result = add1(result)
+        plt.matshow(result)
+        plt.show()
+        quit()
 
+        bins = defaultdict(list)
         for i in range(data[d].shape[0]):
             for j in range(data[d].shape[0]):
                 if data[d][i,j] > 0:
+                    if result[i,j] > 0:
+                        bins[result[i,j]].append((i,j))
+                        f1 = max(f1, result[i,j])
                     result[i,j] = 1
 
-        f1 = max(f1, np.max(result))
-
-        indices = np.transpose(np.nonzero(result))
-
-
-        bins = defaultdict(list)
-        for index in indices:
-            bins[result[index[0], index[1]]].append(index)
 
         max_oscillating_cells = (-1,-1) #   (key, num oscillating cells)
         for key, vals in bins.items():
@@ -49,7 +53,9 @@ def fitness(data):
     f1 = f1 / (len(data) - 1)
     f2 = f2 / (result.shape[0]*result.shape[1])
     #f3 is implicity normalized
-    
+    f1 = max(f1, 0)
+    f2 = max(f2, 0)
+    f3 = max(f3, 0)
     return [f1,f2,f3]
 
 def num_neighbors(grid, i, j):
@@ -221,10 +227,11 @@ if __name__ == "__main__":
 
     game_grid = np.zeros((n,n))
 
+
     fitness_weights = [args.w1, args.w2, args.w3]
 
     #define initial seed
-    with open('./seeds/'+seed,'rb') as pFile:
+    with open('./seeds/'+args.seed,'rb') as pFile:
         game_grid = pickle.load(pFile)
 
     # with open('./seeds/glider.p','rb') as pFile:
