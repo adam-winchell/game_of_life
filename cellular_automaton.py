@@ -19,12 +19,12 @@ def fitness(data):
 
     add1 = np.vectorize(lambda x: x+1 if x > 0 else 0)
     for d in range(1,len(data)):
-        plt.matshow(result)
-        plt.show()
+        # plt.matshow(result)
+        # plt.show()
         result = add1(result)
-        plt.matshow(result)
-        plt.show()
-        quit()
+        # plt.matshow(result)
+        # plt.show()
+        # quit()
 
         bins = defaultdict(list)
         for i in range(data[d].shape[0]):
@@ -48,9 +48,10 @@ def fitness(data):
             dist = pdist(bins[max_oscillating_cells[0]])
             f3 = 1 / (dist.sum()/max_oscillating_cells[1])
 
-
     #normalize the fitness values to range [0,1]
+    print("max cell oscillating period:",f1)
     f1 = f1 / (len(data) - 1)
+
     f2 = f2 / (result.shape[0]*result.shape[1])
     #f3 is implicity normalized
     f1 = max(f1, 0)
