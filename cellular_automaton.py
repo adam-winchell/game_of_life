@@ -49,12 +49,13 @@ def fitness(data):
             f3 = 1 / (dist.sum()/max_oscillating_cells[1])
 
     #normalize the fitness values to range [0,1]
-    print("max cell oscillating period:",f1)
-    f1 = f1 / (len(data) - 1)
+    # print("max cell oscillating period:",f1)
+    f1 = (2*f1)/ len(data) #an oscillator of period n when running for 2n timesteps will have an f1 of 1
 
     f2 = f2 / (result.shape[0]*result.shape[1])
     #f3 is implicity normalized
     f1 = max(f1, 0)
+    f1 = f1 if f1 <= 1 else 0    #only want to consider cells oscillating at the period of interest, not at higher periods
     f2 = max(f2, 0)
     f3 = max(f3, 0)
     return [f1,f2,f3]
@@ -197,7 +198,7 @@ if __name__ == "__main__":
     parser.add_argument('--n', type=int, default=50,
                         help='size of grid (default: 50)')
     parser.add_argument('--timesteps', type=int, default=19,
-                        help='number of time steps (default: 19)')
+                        help='number of time steps, make it 2n+2 the desired period (default: 38)')
     parser.add_argument('--filename', type=str, default='gliders',
                         help='filename to write to  (default: glider)')
     parser.add_argument('--deletepngs', type=bool, default=True,
