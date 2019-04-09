@@ -13,24 +13,17 @@ def fitness(data):
     result = deepcopy(data[0])
 
     f1, f2 , f3 = -1, -1, -1
-    #TODO calculate f2 and f3 at the period chosen by f1
-    #TODO f4 perimeter of the oscillator
-    #TODO f5 entropy of the board, smaller is better
+    #TODO f4 entropy of the board, smaller is better
 
     add1 = np.vectorize(lambda x: x+1 if x > 0 else 0)
     for d in range(1,len(data)):
-        # plt.matshow(result)
-        # plt.show()
         result = add1(result)
-        # plt.matshow(result)
-        # plt.show()
-        # quit()
 
         bins = defaultdict(list)
         for i in range(data[d].shape[0]):
             for j in range(data[d].shape[0]):
                 if data[d][i,j] > 0:
-                    if result[i,j] > 0:
+                    if result[i,j] > 1: #ignore still lifes
                         bins[result[i,j]].append((i,j))
                         f1 = max(f1, result[i,j])
                     result[i,j] = 1
@@ -50,14 +43,16 @@ def fitness(data):
 
     #normalize the fitness values to range [0,1]
     # print("max cell oscillating period:",f1)
-    f1 = (2*f1)/ len(data) #an oscillator of period n when running for 2n timesteps will have an f1 of 1
 
-    f2 = f2 / (result.shape[0]*result.shape[1])
+    f1 = (2*f1)/ len(data) #an oscillator of period n when running for 2n timesteps will have an f1 of 1
+    f2 = f2 / (np.count_nonzero(result)) #normalize by the number of cells that were turned on overall
     #f3 is implicity normalized
+
     f1 = max(f1, 0)
     f1 = f1 if f1 <= 1 else 0    #only want to consider cells oscillating at the period of interest, not at higher periods
     f2 = max(f2, 0)
     f3 = max(f3, 0)
+
     return [f1,f2,f3]
 
 def num_neighbors(grid, i, j):
