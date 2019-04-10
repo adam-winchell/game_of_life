@@ -15,6 +15,24 @@ def fitness(data):
     f1, f2 , f3 = -1, -1, -1
     #TODO f4 entropy of the board, smaller is better
 
+    lst = np.ravel(data[0])
+    compressed_mat = ''
+    temp = [lst[0], 1]
+
+    for num in lst[1:]:
+        if num == temp[0]:
+            temp[1] += 1
+        else:
+            if temp[0] == 0:
+                compressed_mat += str(temp[1])+'a'
+            else:
+                compressed_mat += str(temp[1]) + 'b'
+            temp = [num, 1]
+
+    f4 = 1 / len(compressed_mat)
+
+
+
     add1 = np.vectorize(lambda x: x+1 if x > 0 else 0)
     for d in range(1,len(data)):
         result = add1(result)
@@ -53,7 +71,7 @@ def fitness(data):
     f2 = max(f2, 0)
     f3 = max(f3, 0)
 
-    return [f1,f2,f3]
+    return [f1,f2,f3,f4]
 
 def num_neighbors(grid, i, j):
     return grid[(i - 1) % grid.shape[0], j] + grid[(i - 1) % grid.shape[0], (j - 1) % grid.shape[1]] + grid[
