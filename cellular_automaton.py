@@ -204,7 +204,7 @@ def main(n=50, time_steps=3, filename='glider', delete_pngs=True, w1=0.25, w2=0.
     else:
         return np.dot(fitness_weights, fitness_values)
 
-def run_for_ga(game_grid, time_steps=3, w1=0.25, w2=0.25, w3=0.25, w4=0.25):
+def run_for_ga(game_grid, time_steps=3, w1=0.5, w2=0.5, w3=10, w4=10):
     fitness_weights = [w1, w2, w3, w4]
 
     fitness_values = game_of_life(game_grid, time_steps)
