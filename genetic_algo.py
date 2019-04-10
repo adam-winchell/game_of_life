@@ -33,7 +33,6 @@ def run_genetic_algorithm(max_num_generations=400, fitness_threshold=0.9, popula
             a.fitness = ca.run_for_ga(game_grid=a.board, time_steps=10)
 
         agents = sorted(agents, key=lambda x: x.fitness, reverse=True)
-
         agents = agents[:-int(top_k*(top_k-1))] #each of the top_k agents will breed with eachother, thus we will remove the bottom n*n-1 agents
 
         if agents[0].fitness >= fitness_threshold:
@@ -41,8 +40,9 @@ def run_genetic_algorithm(max_num_generations=400, fitness_threshold=0.9, popula
 
         children = []
         for i in range(top_k):
-            for j in range(i, top_k):
-                children.append(agents[i].crossover(agents[j]))
+            for j in range(top_k):
+                if i != j:
+                    children.append(agents[i].crossover(agents[j]))
 
         agents.extend(children)
 
