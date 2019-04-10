@@ -13,7 +13,6 @@ def fitness(data):
     result = deepcopy(data[0])
 
     f1, f2 , f3 = -1, -1, -1
-    #TODO f4 entropy of the board, smaller is better
 
     lst = np.ravel(data[0])
     compressed_mat = ''
@@ -173,7 +172,7 @@ def game_of_life_gif(game_grid, time_steps, filename, delete_pngs):
 
     return fitness(fitness_frames)
 
-def main(n=50, time_steps=3, filename='glider', delete_pngs=True, w1=0.33, w2=0.33, w3=0.33, gif_on=False, seed='glider.p', individual_fitness=True):
+def main(n=50, time_steps=3, filename='glider', delete_pngs=True, w1=0.25, w2=0.25, w3=0.25, w4=0.25, gif_on=False, seed='glider.p', individual_fitness=True):
 
     filename = 'oscillators/' + filename
 
@@ -184,7 +183,7 @@ def main(n=50, time_steps=3, filename='glider', delete_pngs=True, w1=0.33, w2=0.
 
     game_grid = np.zeros((n,n))
 
-    fitness_weights = [w1, w2, w3]
+    fitness_weights = [w1, w2, w3, w4]
 
     #define initial seed
     with open('./seeds/'+seed,'rb') as pFile:
@@ -205,6 +204,12 @@ def main(n=50, time_steps=3, filename='glider', delete_pngs=True, w1=0.33, w2=0.
     else:
         return np.dot(fitness_weights, fitness_values)
 
+def run_for_ga(game_grid, time_steps=3, w1=0.25, w2=0.25, w3=0.25, w4=0.25):
+    fitness_weights = [w1, w2, w3, w4]
+
+    fitness_values = game_of_life(game_grid, time_steps)
+
+    return np.dot(fitness_weights, fitness_values)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Game of Life')
@@ -222,6 +227,8 @@ if __name__ == "__main__":
                         help='weight for fitness function 2')
     parser.add_argument('--w3', type=int, default=0.33,
                         help='weight for fitness function 3')
+    parser.add_argument('--w4', type=int, default=0.33,
+                        help='weight for fitness function 4')
     parser.add_argument('--gif', type=int, default=1,
                         help='should we create a gif')
     parser.add_argument('--seed', type=str, default='glider.p',
@@ -243,7 +250,7 @@ if __name__ == "__main__":
     game_grid = np.zeros((n,n))
 
 
-    fitness_weights = [args.w1, args.w2, args.w3]
+    fitness_weights = [args.w1, args.w2, args.w3, args.w4]
 
     #define initial seed
     with open('./seeds/'+args.seed,'rb') as pFile:
