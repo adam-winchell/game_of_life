@@ -2,7 +2,8 @@ import cellular_automaton as ca
 import numpy as np
 import matplotlib.pyplot as plt
 import pickle
-import multiprocessing
+from multiprocessing import Pool
+from os import cpu_count
 
 class GA:
     def __init__(self, board_size=(50,50), ratio=0.2, fitness=0, board=[]):
@@ -37,7 +38,7 @@ def run_genetic_algorithm(max_num_generations=500, fitness_threshold=0.95, popul
     agents = [GA() for _ in range(population_size)]
 
     for g in range(max_num_generations):
-        with multiprocessing.Pool(processes=4) as pool:
+        with Pool(processes=cpu_count()) as pool:
             agents = pool.map(run_ca, agents)
 
         agents = sorted(agents, key=lambda x: x.fitness, reverse=True)
