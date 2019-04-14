@@ -43,7 +43,7 @@ def run_ca(agent):
     return agent
 
 
-def run_genetic_algorithm(max_num_generations=500, fitness_threshold=0.95, population_size=124, top_k=5, num_to_return=5):
+def run_genetic_algorithm(max_num_generations=1000, fitness_threshold=1, population_size=124, top_k=5, num_to_return=5, save_every_n=10):
     agents = [GA() for _ in range(population_size)]
 
     for g in range(max_num_generations):
@@ -66,11 +66,17 @@ def run_genetic_algorithm(max_num_generations=500, fitness_threshold=0.95, popul
 
         print('Generation %s, best fitness %s'%(g, agents[0].fitness))
 
+        if g%save_every_n == 0:
+            for num, r in enumerate(agents[:num_to_return]):
+                filename = 'ga_results/ga'+str(num)
+                with open(filename, 'wb') as pFile:
+                    pickle.dump(r.board, pFile)
+
     return agents[:num_to_return]
 
-def ga_best_performers(max_num_generations=500, fitness_threshold=0.95, top_k=10, num_to_return=5, ratio=0.05, save_every_n=10):
+def ga_best_performers(max_num_generations=500, fitness_threshold=1, top_k=10, num_to_return=5, ratio=0.1, save_every_n=10):
     population_size = top_k**2 + top_k
-    agents = [GA(ratio=ratio) for _ in range(population_size)]
+    agents = [GA(ratio=ratio, gauss_init=False) for _ in range(population_size)]
 
     for g in range(max_num_generations):
         with Pool(processes=cpu_count()) as pool:
@@ -95,14 +101,14 @@ def ga_best_performers(max_num_generations=500, fitness_threshold=0.95, top_k=10
 
         if g%save_every_n == 0:
             for num, r in enumerate(agents[:num_to_return]):
-                filename = 'ga_results/' + str(num)
+                filename = 'ga_results/bp' + str(num)
                 with open(filename, 'wb') as pFile:
                     pickle.dump(r.board, pFile)
 
 
     return agents[:num_to_return]
 
-def ga_best_performers_with_noise(max_num_generations=500, fitness_threshold=0.95, top_k=10, num_to_return=5):
+def ga_best_performers_with_noise(max_num_generations=1000, fitness_threshold=1, top_k=10, num_to_return=5, save_every_n=10):
     population_size = top_k**2 + top_k + top_k  #we will keep the top_k and a random number of k agents
     agents = [GA() for _ in range(population_size)]
 
@@ -128,6 +134,12 @@ def ga_best_performers_with_noise(max_num_generations=500, fitness_threshold=0.9
 
         print('Generation %s, best fitness %s'%(g, agents[0].fitness))
 
+        if g%save_every_n == 0:
+            for num, r in enumerate(agents[:num_to_return]):
+                filename = 'ga_results/bpn' + str(num)
+                with open(filename, 'wb') as pFile:
+                    pickle.dump(r.board, pFile)
+
     return agents[:num_to_return]
 
 def plot_grid(game_grid):
@@ -151,7 +163,7 @@ if __name__ == '__main__':
         with open(filename, 'wb') as pFile:
             pickle.dump(r.board, pFile)
 
-    plot_grid(result[0].board)
+
 
 
 
