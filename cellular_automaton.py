@@ -56,7 +56,10 @@ def fitness(data):
             f2 = max_oscillating_cells[1]
 
             dist = pdist(bins[max_oscillating_cells[0]])
-            f3 = 1 / (dist.sum()/max_oscillating_cells[1])
+
+            if max_oscillating_cells[1] > 1:   #more than 1 cell is oscillating
+                f3 = 1 / (dist.sum()/max_oscillating_cells[1])
+
 
     #normalize the fitness values to range [0,1]
     # print("max cell oscillating period:",f1)
@@ -69,6 +72,7 @@ def fitness(data):
     f1 = f1 if f1 <= 1 else 0    #only want to consider cells oscillating at the period of interest, not at higher periods
     f2 = max(f2, 0)
     f3 = max(f3, 0)
+    # print([f1,f2,f3,f4])
 
     return [f1,f2,f3,f4]
 
@@ -204,7 +208,7 @@ def main(n=50, time_steps=3, filename='glider', delete_pngs=True, w1=0.25, w2=0.
     else:
         return np.dot(fitness_weights, fitness_values)
 
-def run_for_ga(game_grid, time_steps=3, w1=0.5, w2=0.5, w3=10, w4=10):
+def run_for_ga(game_grid, time_steps=3, w1=0.5, w2=0.5, w3=10, w4=10):  #TODO find better weights, f3 can be maximized when life_ratio is 0.05 which is bad
     fitness_weights = [w1, w2, w3, w4]
 
     fitness_values = game_of_life(game_grid, time_steps)
@@ -256,16 +260,6 @@ if __name__ == "__main__":
     with open('./seeds/'+args.seed,'rb') as pFile:
         game_grid = pickle.load(pFile)
 
-    # with open('./seeds/glider.p','rb') as pFile:
-    #     game_grid = pickle.load(pFile)
-    # for i in range(game_grid.shape[0]):
-    #     for j in range(game_grid.shape[0]):
-    #         if np.random.uniform(0,1) > 0.5:
-    #             game_grid[i,j] = 1
-    
-
-    # with open('./seeds/penta-decathlon.p','wb') as pFile:
-    #     pickle.dump(game_grid,pFile)
     
 
     if gif_on:

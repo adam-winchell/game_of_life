@@ -6,10 +6,19 @@ from multiprocessing import Pool
 from os import cpu_count
 
 class GA:
-    def __init__(self, board_size=(50,50), ratio=0.2, fitness=0, board=[]):
+    def __init__(self, board_size=(50,50), ratio=0.2, fitness=0, board=[], gauss_init=True):
         self.fitness = fitness
         if board == []:
-            self.board = np.random.binomial(n=1, p=ratio, size=board_size)
+            if gauss_init:
+                game_grid = np.zeros(board_size)
+                xs,ys = np.random.multivariate_normal([board_size[0]/2, board_size[1]/2], [[board_size[0]/5, 0], [0,board_size[1]/5]], int(board_size[0]*board_size[1]*ratio)).T
+                xs = [int(x) for x in xs]
+                ys = [int(y) for y in ys]
+                for x,y in zip(xs, ys):
+                    game_grid[x,y] = 1
+                self.board = game_grid
+            else:
+                self.board = np.random.binomial(n=1, p=ratio, size=board_size)
         else:
             self.board = board
 
@@ -29,7 +38,7 @@ class GA:
 
 
 def run_ca(agent):
-    f = ca.run_for_ga(game_grid=agent.board, time_steps=10)
+    f = ca.run_for_ga(game_grid=agent.board, time_steps=22)
     agent.fitness = f
     return agent
 
@@ -59,7 +68,7 @@ def run_genetic_algorithm(max_num_generations=500, fitness_threshold=0.95, popul
 
     return agents[:num_to_return]
 
-def ga_best_performers(max_num_generations=500, fitness_threshold=0.95, top_k=10, num_to_return=5, ratio=0.1, save_every_n=10):
+def ga_best_performers(max_num_generations=500, fitness_threshold=0.95, top_k=10, num_to_return=5, ratio=0.05, save_every_n=10):
     population_size = top_k**2 + top_k
     agents = [GA(ratio=ratio) for _ in range(population_size)]
 
@@ -71,6 +80,8 @@ def ga_best_performers(max_num_generations=500, fitness_threshold=0.95, top_k=10
         agents = agents[:top_k] #keep the top_k performers
 
         if agents[0].fitness >= fitness_threshold:  #TODO or the GA has stopped improving
+            plot_grid(agents[0].board)
+            quit()
             break   #we are done
 
         children = []
