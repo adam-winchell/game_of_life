@@ -31,7 +31,7 @@ def fitness(data):
     f4 = 1 / len(compressed_mat)
 
     f5 = 1 / np.std([np.sum(data[d]) for d in range(len(data))])    #rewards agents whose number of pixels stays constant, i.e. low std of pixels over the run, this should prevent structures from dying out
-
+    f5 = min(1, f5) #if the std was 0, f5 is maximized at 1
 
     add1 = np.vectorize(lambda x: x+1 if x > 0 else 0)
     for d in range(1,len(data)):
