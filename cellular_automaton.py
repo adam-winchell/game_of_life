@@ -30,6 +30,7 @@ def fitness(data):
 
     f4 = 1 / len(compressed_mat)
 
+    f5 = 1 / np.std([np.sum(data[d]) for d in range(len(data))])    #rewards agents whose number of pixels stays constant, i.e. low std of pixels over the run, this should prevent structures from dying out
 
 
     add1 = np.vectorize(lambda x: x+1 if x > 0 else 0)
@@ -72,9 +73,9 @@ def fitness(data):
     f1 = f1 if f1 <= 1 else 0    #only want to consider cells oscillating at the period of interest, not at higher periods
     f2 = max(f2, 0)
     f3 = max(f3, 0)
-    # print([f1,f2,f3,f4])
+    # print([f1,f2,f3,f4,f5])
 
-    return [f1,f2,f3,f4]
+    return [f1,f2,f3,f4,f5]
 
 def num_neighbors(grid, i, j):
     return grid[(i - 1) % grid.shape[0], j] + grid[(i - 1) % grid.shape[0], (j - 1) % grid.shape[1]] + grid[
@@ -176,7 +177,7 @@ def game_of_life_gif(game_grid, time_steps, filename, delete_pngs):
 
     return fitness(fitness_frames)
 
-def main(n=50, time_steps=3, filename='glider', delete_pngs=True, w1=0.25, w2=0.25, w3=0.25, w4=0.25, gif_on=False, seed='glider.p', individual_fitness=True):
+def main(n=50, time_steps=3, filename='glider', delete_pngs=True, w1=0.2, w2=0.2, w3=0.2, w4=0.2, w5=0.2, gif_on=False, seed='glider.p', individual_fitness=True):
 
     filename = 'oscillators/' + filename
 
@@ -187,7 +188,7 @@ def main(n=50, time_steps=3, filename='glider', delete_pngs=True, w1=0.25, w2=0.
 
     game_grid = np.zeros((n,n))
 
-    fitness_weights = [w1, w2, w3, w4]
+    fitness_weights = [w1, w2, w3, w4, w5]
 
     #define initial seed
     with open('./seeds/'+seed,'rb') as pFile:
@@ -208,8 +209,8 @@ def main(n=50, time_steps=3, filename='glider', delete_pngs=True, w1=0.25, w2=0.
     else:
         return np.dot(fitness_weights, fitness_values)
 
-def run_for_ga(game_grid, time_steps=3, w1=0.5, w2=0.5, w3=10, w4=10):  #TODO find better weights, f3 can be maximized when life_ratio is 0.05 which is bad
-    fitness_weights = [w1, w2, w3, w4]
+def run_for_ga(game_grid, time_steps=3, w1=0.5, w2=0.5, w3=10, w4=10, w5=1):  #TODO find better weights, f3 can be maximized when life_ratio is 0.05 which is bad
+    fitness_weights = [w1, w2, w3, w4, w5]
 
     fitness_values = game_of_life(game_grid, time_steps)
 
@@ -233,6 +234,8 @@ if __name__ == "__main__":
                         help='weight for fitness function 3')
     parser.add_argument('--w4', type=int, default=0.33,
                         help='weight for fitness function 4')
+    parser.add_argument('--w5', type=int, default=0.33,
+                        help='weight for fitness function 5')
     parser.add_argument('--gif', type=int, default=1,
                         help='should we create a gif')
     parser.add_argument('--seed', type=str, default='glider.p',

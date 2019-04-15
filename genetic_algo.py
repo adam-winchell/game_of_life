@@ -4,9 +4,10 @@ import matplotlib.pyplot as plt
 import pickle
 from multiprocessing import Pool
 from os import cpu_count
+import os
 
 class GA:
-    def __init__(self, board_size=(50,50), ratio=0.2, fitness=0, board=[], gauss_init=True):
+    def __init__(self, board_size=(50,50), ratio=0.2, fitness=0, board=[], gauss_init=False):
         self.fitness = fitness
         if board == []:
             if gauss_init:
@@ -74,7 +75,7 @@ def run_genetic_algorithm(max_num_generations=1000, fitness_threshold=1, populat
 
     return agents[:num_to_return]
 
-def ga_best_performers(max_num_generations=500, fitness_threshold=1, top_k=10, num_to_return=5, ratio=0.1, save_every_n=10):
+def ga_best_performers(max_num_generations=1000, fitness_threshold=1, top_k=10, num_to_return=5, ratio=0.1, save_every_n=10):
     population_size = top_k**2 + top_k
     agents = [GA(ratio=ratio, gauss_init=False) for _ in range(population_size)]
 
@@ -154,9 +155,12 @@ def plot_grid(game_grid):
 
 
 if __name__ == '__main__':
-    # result = run_genetic_algorithm(max_num_generations=1000)
-    result = ga_best_performers()
-    # result = ga_best_performers_with_noise()
+    if not os.path.isdir('ga_results'):
+        os.makedirs('ga_results')
+
+    # result = run_genetic_algorithm()
+    # result = ga_best_performers()
+    result = ga_best_performers_with_noise()
 
     for num, r in enumerate(result):
         filename = 'ga_results/'+str(num)
