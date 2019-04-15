@@ -257,7 +257,7 @@ if __name__ == "__main__":
     game_grid = np.zeros((n,n))
 
 
-    fitness_weights = [args.w1, args.w2, args.w3, args.w4]
+    fitness_weights = [args.w1, args.w2, args.w3, args.w4, args.w5]
 
     #define initial seed
     with open('./seeds/'+args.seed,'rb') as pFile:

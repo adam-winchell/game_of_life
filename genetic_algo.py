@@ -44,7 +44,7 @@ def run_ca(agent):
     return agent
 
 
-def run_genetic_algorithm(max_num_generations=1000, fitness_threshold=1, population_size=124, top_k=5, num_to_return=5, save_every_n=10):
+def run_genetic_algorithm(max_num_generations=1000, fitness_threshold=2, population_size=124, top_k=5, num_to_return=5, save_every_n=10):
     agents = [GA() for _ in range(population_size)]
 
     for g in range(max_num_generations):
@@ -75,9 +75,9 @@ def run_genetic_algorithm(max_num_generations=1000, fitness_threshold=1, populat
 
     return agents[:num_to_return]
 
-def ga_best_performers(max_num_generations=1000, fitness_threshold=1, top_k=10, num_to_return=5, ratio=0.1, save_every_n=10):
+def ga_best_performers(max_num_generations=1000, fitness_threshold=2, top_k=10, num_to_return=5, ratio=0.1, save_every_n=10):
     population_size = top_k**2 + top_k
-    agents = [GA(ratio=ratio, gauss_init=False) for _ in range(population_size)]
+    agents = [GA(ratio=ratio) for _ in range(population_size)]
 
     for g in range(max_num_generations):
         with Pool(processes=cpu_count()) as pool:
@@ -87,8 +87,6 @@ def ga_best_performers(max_num_generations=1000, fitness_threshold=1, top_k=10, 
         agents = agents[:top_k] #keep the top_k performers
 
         if agents[0].fitness >= fitness_threshold:  #TODO or the GA has stopped improving
-            plot_grid(agents[0].board)
-            quit()
             break   #we are done
 
         children = []
@@ -109,7 +107,7 @@ def ga_best_performers(max_num_generations=1000, fitness_threshold=1, top_k=10, 
 
     return agents[:num_to_return]
 
-def ga_best_performers_with_noise(max_num_generations=1000, fitness_threshold=1, top_k=10, num_to_return=5, save_every_n=10):
+def ga_best_performers_with_noise(max_num_generations=1000, fitness_threshold=2, top_k=10, num_to_return=5, save_every_n=10):
     population_size = top_k**2 + top_k + top_k  #we will keep the top_k and a random number of k agents
     agents = [GA() for _ in range(population_size)]
 
@@ -159,8 +157,8 @@ if __name__ == '__main__':
         os.makedirs('ga_results')
 
     # result = run_genetic_algorithm()
-    # result = ga_best_performers()
-    result = ga_best_performers_with_noise()
+    result = ga_best_performers()
+    # result = ga_best_performers_with_noise()
 
     for num, r in enumerate(result):
         filename = 'ga_results/'+str(num)
