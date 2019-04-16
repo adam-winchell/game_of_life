@@ -7,11 +7,12 @@ from os import cpu_count
 import os
 import test_fitness
 
-
-
 ####################################
-#Global variables
-weights = []
+# Global variables
+#used to avoid passing multiple args to multiprocess
+time_steps = 22
+weights = test_fitness.get_weights()
+####################################
 
 class GA:
     def __init__(self, board_size=(50,50), ratio=0.2, fitness=0, board=[], gauss_init=False):
@@ -46,9 +47,8 @@ class GA:
 
 
 def run_ca(agent):
-    global weights
     #weights was defined as a global variable to the script to get fix the pool.map function
-    f = ca.run_for_ga(game_grid=agent.board, fitness_weights=weights, time_steps=22)
+    f = ca.run_for_ga(game_grid=agent.board, fitness_weights=weights, time_steps=time_steps)
     agent.fitness = f
     return agent
 
@@ -91,9 +91,6 @@ def ga_best_performers(max_num_generations=1000, fitness_threshold=1, top_k=10, 
     population_size = top_k**2 + top_k
     agents = [GA(ratio=ratio) for _ in range(population_size)]
 
-    global weights
-    weights = test_fitness.get_weights()
-
     for g in range(max_num_generations):
         with Pool(processes=cpu_count()) as pool:
             agents = pool.map(run_ca, agents)
@@ -123,11 +120,8 @@ def ga_best_performers(max_num_generations=1000, fitness_threshold=1, top_k=10, 
     return agents[:num_to_return]
 
 def ga_best_performers_with_noise(max_num_generations=1000, fitness_threshold=1, top_k=10, num_to_return=5, save_every_n=10):
-    population_size = top_k**2 + top_k + top_k  #we will keep the top_k and a random number of k agents
+    population_size = (2*top_k)**2 + top_k + top_k  #we will keep the top_k and a random number of k agents and each round we reproduce the the top_k + a random_k, everyone with eachother
     agents = [GA() for _ in range(population_size)]
-
-    global weights
-    weights = test_fitness.get_weights()
 
     for g in range(max_num_generations):
         with Pool(processes=cpu_count()) as pool:
@@ -135,16 +129,54 @@ def ga_best_performers_with_noise(max_num_generations=1000, fitness_threshold=1,
 
         agents = sorted(agents, key=lambda x: x.fitness, reverse=True)
 
+        if agents[0].fitness >= fitness_threshold:  #TODO or the GA has stopped improving
+            break   #we are done
+
         nums = np.random.randint(low=top_k, high=len(agents), size=top_k)
 
         agents = agents[:top_k] + [agents[i] for i in nums]
 
+
+        children = []
+        for i in range(len(agents)):
+            for j in range(len(agents)):
+                    children.append(agents[i].crossover(agents[j]))
+
+        agents.extend(children)
+
+        print('Generation %s, best fitness %s'%(g, agents[0].fitness))
+
+        if g%save_every_n == 0:
+            for num, r in enumerate(agents[:num_to_return]):
+                filename = 'ga_results/bpn' + str(num)
+                with open(filename, 'wb') as pFile:
+                    pickle.dump(r.board, pFile)
+
+    return agents[:num_to_return]
+
+
+
+def ga_weighted_best_performers(max_num_generations=1000, fitness_threshold=1, num_parents=10, num_to_return=5, save_every_n=10):
+    population_size = num_parents**2 + num_parents
+    agents = [GA() for _ in range(population_size)]
+
+
+    for g in range(max_num_generations):
+        with Pool(processes=cpu_count()) as pool:
+            agents = pool.map(run_ca, agents)
+
+        agents = sorted(agents, key=lambda x: x.fitness, reverse=True)
+
         if agents[0].fitness >= fitness_threshold:  #TODO or the GA has stopped improving
             break   #we are done
 
+        probabilities = [(len(agents) - agent_rank) / ((len(agents) * (len(agents) + 1)) / 2) for agent_rank in range(len(agents))]
+
+        agents = np.random.choice(a=agents, p=probabilities, replace=False, size=num_parents)
+
         children = []
-        for i in range(top_k):
-            for j in range(top_k):
+        for i in range(len(agents)):
+            for j in range(len(agents)):
                     children.append(agents[i].crossover(agents[j]))
 
         agents.extend(children)
@@ -174,9 +206,10 @@ if __name__ == '__main__':
     if not os.path.isdir('ga_results'):
         os.makedirs('ga_results')
 
+    result = ga_weighted_best_performers()
     # result = run_genetic_algorithm()
     # result = ga_best_performers()
-    result = ga_best_performers_with_noise()
+    # result = ga_best_performers_with_noise(max_num_generations=10000)
 
     for num, r in enumerate(result):
         filename = 'ga_results/'+str(num)
