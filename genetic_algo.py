@@ -170,7 +170,7 @@ def ga_weighted_best_performers(max_num_generations=1000, fitness_threshold=1, n
         if agents[0].fitness >= fitness_threshold:  #TODO or the GA has stopped improving
             break   #we are done
 
-        probabilities = [(len(agents) - agent_rank) / ((len(agents) * (len(agents) + 1)) / 2) for agent_rank in range(len(agents))]
+        probabilities = [((len(agents) - agent_rank)**2 )/ ((len(agents) * (len(agents) + 1)*(2*len(agents) + 1)) / 6) for agent_rank in range(len(agents))]    #based on sum of i to k of k^2
 
         agents = np.random.choice(a=agents, p=probabilities, replace=False, size=num_parents)
 
