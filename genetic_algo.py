@@ -44,7 +44,7 @@ def run_ca(agent):
     return agent
 
 
-def run_genetic_algorithm(max_num_generations=1000, fitness_threshold=2, population_size=124, top_k=5, num_to_return=5, save_every_n=10):
+def run_genetic_algorithm(max_num_generations=1000, fitness_threshold=1, population_size=124, top_k=5, num_to_return=5, save_every_n=10):
     agents = [GA() for _ in range(population_size)]
 
     for g in range(max_num_generations):
@@ -75,7 +75,7 @@ def run_genetic_algorithm(max_num_generations=1000, fitness_threshold=2, populat
 
     return agents[:num_to_return]
 
-def ga_best_performers(max_num_generations=1000, fitness_threshold=2, top_k=10, num_to_return=5, ratio=0.1, save_every_n=10):
+def ga_best_performers(max_num_generations=1000, fitness_threshold=1, top_k=10, num_to_return=5, ratio=0.1, save_every_n=10):
     population_size = top_k**2 + top_k
     agents = [GA(ratio=ratio) for _ in range(population_size)]
 
@@ -107,7 +107,7 @@ def ga_best_performers(max_num_generations=1000, fitness_threshold=2, top_k=10, 
 
     return agents[:num_to_return]
 
-def ga_best_performers_with_noise(max_num_generations=1000, fitness_threshold=2, top_k=10, num_to_return=5, save_every_n=10):
+def ga_best_performers_with_noise(max_num_generations=1000, fitness_threshold=1, top_k=10, num_to_return=5, save_every_n=10):
     population_size = top_k**2 + top_k + top_k  #we will keep the top_k and a random number of k agents
     agents = [GA() for _ in range(population_size)]
 
