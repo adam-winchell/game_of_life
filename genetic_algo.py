@@ -6,6 +6,8 @@ from multiprocessing import Pool
 from os import cpu_count
 import os
 import test_fitness
+import argparse
+
 
 ####################################
 # Global variables
@@ -207,10 +209,21 @@ if __name__ == '__main__':
     if not os.path.isdir('ga_results'):
         os.makedirs('ga_results')
 
-    result = ga_weighted_best_performers()
-    # result = run_genetic_algorithm()
-    # result = ga_best_performers()
-    # result = ga_best_performers_with_noise(max_num_generations=10000)
+    parser = argparse.ArgumentParser(description='Genetic Algorithm')
+    parser.add_argument('--algo', type=str, default='ga',
+                        help='which ga algorithm to run  (default: ga)')
+
+    args = parser.parse_args()
+
+    if args.algo == 'ga':
+        result = run_genetic_algorithm()
+    elif args.algo == 'wbp':
+        result = ga_weighted_best_performers(max_num_generations=10000)
+    elif args.algo == 'bp':
+        result = ga_best_performers(max_num_generations=10000, top_k=100)
+    elif args.algo == 'bpn':
+        result = ga_best_performers_with_noise(max_num_generations=10000)
+
 
     for num, r in enumerate(result):
         filename = 'ga_results/'+str(num)
