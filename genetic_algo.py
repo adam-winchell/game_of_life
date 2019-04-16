@@ -185,7 +185,7 @@ def ga_weighted_best_performers(max_num_generations=1000, fitness_threshold=1, n
 
         if g%save_every_n == 0:
             for num, r in enumerate(agents[:num_to_return]):
-                filename = 'ga_results/bpn' + str(num)
+                filename = 'ga_results/wbp' + str(num)
                 with open(filename, 'wb') as pFile:
                     pickle.dump(r.board, pFile)
 
