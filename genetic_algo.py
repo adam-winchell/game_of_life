@@ -5,6 +5,13 @@ import pickle
 from multiprocessing import Pool
 from os import cpu_count
 import os
+import test_fitness
+
+
+
+####################################
+#Global variables
+weights = []
 
 class GA:
     def __init__(self, board_size=(50,50), ratio=0.2, fitness=0, board=[], gauss_init=False):
@@ -39,13 +46,18 @@ class GA:
 
 
 def run_ca(agent):
-    f = ca.run_for_ga(game_grid=agent.board, time_steps=22)
+    global weights
+    #weights was defined as a global variable to the script to get fix the pool.map function
+    f = ca.run_for_ga(game_grid=agent.board, fitness_weights=weights, time_steps=22)
     agent.fitness = f
     return agent
 
 
 def run_genetic_algorithm(max_num_generations=1000, fitness_threshold=1, population_size=124, top_k=5, num_to_return=5, save_every_n=10):
     agents = [GA() for _ in range(population_size)]
+
+    global weights
+    weights = test_fitness.get_weights()
 
     for g in range(max_num_generations):
         with Pool(processes=cpu_count()) as pool:
@@ -79,6 +91,9 @@ def ga_best_performers(max_num_generations=1000, fitness_threshold=1, top_k=10, 
     population_size = top_k**2 + top_k
     agents = [GA(ratio=ratio) for _ in range(population_size)]
 
+    global weights
+    weights = test_fitness.get_weights()
+
     for g in range(max_num_generations):
         with Pool(processes=cpu_count()) as pool:
             agents = pool.map(run_ca, agents)
@@ -110,6 +125,9 @@ def ga_best_performers(max_num_generations=1000, fitness_threshold=1, top_k=10, 
 def ga_best_performers_with_noise(max_num_generations=1000, fitness_threshold=1, top_k=10, num_to_return=5, save_every_n=10):
     population_size = top_k**2 + top_k + top_k  #we will keep the top_k and a random number of k agents
     agents = [GA() for _ in range(population_size)]
+
+    global weights
+    weights = test_fitness.get_weights()
 
     for g in range(max_num_generations):
         with Pool(processes=cpu_count()) as pool:
@@ -157,8 +175,8 @@ if __name__ == '__main__':
         os.makedirs('ga_results')
 
     # result = run_genetic_algorithm()
-    result = ga_best_performers()
-    # result = ga_best_performers_with_noise()
+    # result = ga_best_performers()
+    result = ga_best_performers_with_noise()
 
     for num, r in enumerate(result):
         filename = 'ga_results/'+str(num)

@@ -8,7 +8,6 @@ import pickle
 from copy import deepcopy
 from scipy.spatial.distance import pdist
 from collections import defaultdict
-import test_fitness
 
 def fitness(data):
     result = deepcopy(data[0])
@@ -210,10 +209,7 @@ def main(n=50, time_steps=3, filename='glider', delete_pngs=True, w1=0.2, w2=0.2
     else:
         return np.dot(fitness_weights, fitness_values)
 
-def run_for_ga(game_grid, time_steps=3, w1=0.5, w2=0.5, w3=10, w4=10, w5=1):  #TODO find better weights, f3 can be maximized when life_ratio is 0.05 which is bad
-    # fitness_weights = [w1, w2, w3, w4, w5]
-    fitness_weights = test_fitness.get_weights()
-
+def run_for_ga(game_grid, fitness_weights, time_steps=3 ):  #TODO find better weights, f3 can be maximized when life_ratio is 0.05 which is bad
     fitness_values = game_of_life(game_grid, time_steps)
 
     return np.dot(fitness_weights, fitness_values)
