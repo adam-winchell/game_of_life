@@ -179,7 +179,8 @@ def ga_weighted_best_performers(max_num_generations=1000, fitness_threshold=1, n
             for j in range(len(agents)):
                     children.append(agents[i].crossover(agents[j]))
 
-        [agent for agent in agents].extend(children)
+        agents = [agent for agent in agents]
+        agents.extend(children)
 
         print('Generation %s, best fitness %s'%(g, agents[0].fitness))
 
