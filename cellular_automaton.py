@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.colors import ListedColormap
 import imageio
 import os
 import argparse
@@ -8,35 +7,57 @@ import pickle
 from copy import deepcopy
 from scipy.spatial.distance import pdist
 from collections import defaultdict
+import test_fitness
 
-def fitness(data):
+def fitness(data, desired_period):
     result = deepcopy(data[0])
-
     f1, f2 , f3 = -1, -1, -1
 
-    lst = np.ravel(data[0])
-    compressed_mat = ''
-    temp = [lst[0], 1]
+    # lst = np.ravel(data[0])
+    # compressed_mat = ''
+    # temp = [lst[0], 1]
+    # for num in lst[1:]:
+    #     if num == temp[0]:
+    #         temp[1] += 1
+    #     else:
+    #         if temp[0] == 0:
+    #             compressed_mat += str(temp[1])+'a'
+    #         else:
+    #             compressed_mat += str(temp[1]) + 'b'
+    #         temp = [num, 1]
+    #
+    # f4 = 1 / len(compressed_mat)
 
-    for num in lst[1:]:
-        if num == temp[0]:
-            temp[1] += 1
-        else:
-            if temp[0] == 0:
-                compressed_mat += str(temp[1])+'a'
-            else:
-                compressed_mat += str(temp[1]) + 'b'
-            temp = [num, 1]
+    bound_box = -1
+    sums = []
 
-    f4 = 1 / len(compressed_mat)
+    for d in range(len(data)):
+        crude_box = 0
+        sums.append(np.sum(data[d]))
+        xs, ys = np.where(data[d] == 1)
+        if len(xs) != 0:
+            crude_box += max(xs) - min(xs)
+        if len(ys) != 0:
+            crude_box += max(ys) - min(ys)
+        bound_box = max(crude_box, bound_box)
 
-    s = np.std([np.sum(data[d]) for d in range(len(data))])
+    s = np.std(sums)
+    f5 = 1 if s == 0 else 1 / s
 
-    f5 = 1 if s==0 else 1/s
+    f6 = 1 if bound_box == 0 else 1 / bound_box
+
+
+
+    unique_frames = set()
+    for d in range(len(data)):
+        unique_frames.add(tuple(data[d].ravel()))
+
+    f7 = (2*(len(unique_frames)+1)) / len(data) if (2*(len(unique_frames)+1)) / len(data) <= 1 else len(data)/(2*(len(unique_frames)+1))
 
 
     add1 = np.vectorize(lambda x: x+1 if x > 0 else 0)
     for d in range(1,len(data)):
+
         result = add1(result)
 
         bins = defaultdict(list)
@@ -60,24 +81,27 @@ def fitness(data):
 
             dist = pdist(bins[max_oscillating_cells[0]])
 
-            if max_oscillating_cells[1] > 1:   #more than 1 cell is oscillating
-                f3 = 1 / (dist.sum()/max_oscillating_cells[1])
+            # if max_oscillating_cells[1] > 1:   #more than 1 cell is oscillating
+            #     f3 = 1 / (dist.sum()/max_oscillating_cells[1])
 
 
     #normalize the fitness values to range [0,1]
     # print("max cell oscillating period:",f1)
-
-    f1 = (2*f1)/ len(data) #an oscillator of period n when running for 2n timesteps will have an f1 of 1
+    f1 = (2*f1)/ len(data) if (2*f1)/ len(data) else len(data)/(2*f1) #an oscillator of period n when running for 2n timesteps will have an f1 of 1
     f2 = f2 / (np.count_nonzero(result)) #normalize by the number of cells that were turned on overall
     #f3 is implicity normalized
 
     f1 = max(f1, 0)
     f1 = f1 if f1 <= 1 else 0    #only want to consider cells oscillating at the period of interest, not at higher periods
+    #update f1 to be smoother, i.e. give partial fitness to values greater than 1
     f2 = max(f2, 0)
-    f3 = max(f3, 0)
-    # print([f1,f2,f3,f4,f5])
+    # f3 = max(f3, 0)
 
-    return [f1,f2,f3,f4,f5]
+
+    f = [f1, f2, f6, f7]
+    # print(f)
+
+    return f
 
 def num_neighbors(grid, i, j):
     return grid[(i - 1) % grid.shape[0], j] + grid[(i - 1) % grid.shape[0], (j - 1) % grid.shape[1]] + grid[
@@ -116,6 +140,7 @@ def game_of_life(game_grid, time_steps):
 
     cells_to_update = []
     fitness_frames = []
+    desired_period = (time_steps-2)/2
     for step in range(time_steps):
         fitness_frames.append(game_grid)
 
@@ -136,13 +161,14 @@ def game_of_life(game_grid, time_steps):
         game_grid = update_grid
         cells_to_update = list(temp)
 
-    return fitness(fitness_frames)
+    return fitness(fitness_frames, desired_period)
 
 def game_of_life_gif(game_grid, time_steps, filename, delete_pngs):
 
     images = []
     cells_to_update = []
     fitness_frames = []
+    desired_period = (time_steps-2)/2
     for step in range(time_steps):
         fitness_frames.append(game_grid)
         
@@ -177,10 +203,10 @@ def game_of_life_gif(game_grid, time_steps, filename, delete_pngs):
     # with open('frames.p','wb') as pFile:
         # pickle.dump(fitness_frames,pFile)
 
-    return fitness(fitness_frames)
+    return fitness(fitness_frames, desired_period)
 
-def main(n=50, time_steps=3, filename='glider', delete_pngs=True, w1=0.2, w2=0.2, w3=0.2, w4=0.2, w5=0.2, gif_on=False, seed='glider.p', individual_fitness=True):
-
+def main(n=50, time_steps=3, filename='glider', delete_pngs=True, gif_on=False, seed='glider.p'):
+    desired_period = (time_steps-2)/2
     filename = 'oscillators/' + filename
 
     if not gif_on:
@@ -189,8 +215,6 @@ def main(n=50, time_steps=3, filename='glider', delete_pngs=True, w1=0.2, w2=0.2
 
 
     game_grid = np.zeros((n,n))
-
-    fitness_weights = [w1, w2, w3, w4, w5]
 
     #define initial seed
     with open('./seeds/'+seed,'rb') as pFile:
@@ -206,10 +230,9 @@ def main(n=50, time_steps=3, filename='glider', delete_pngs=True, w1=0.2, w2=0.2
         fitness_values = game_of_life(game_grid, time_steps)
 
 
-    if individual_fitness:
-        return fitness_values
-    else:
-        return np.dot(fitness_weights, fitness_values)
+
+    return fitness_values
+
 
 def run_for_ga(game_grid, fitness_weights, time_steps=3 ):  #TODO find better weights, f3 can be maximized when life_ratio is 0.05 which is bad
     fitness_values = game_of_life(game_grid, time_steps)
@@ -224,8 +247,8 @@ if __name__ == "__main__":
                         help='number of time steps, make it 2n+2 the desired period (default: 38)')
     parser.add_argument('--filename', type=str, default='gliders',
                         help='filename to write to  (default: glider)')
-    parser.add_argument('--deletepngs', type=bool, default=True,
-                        help='delete the pngs for each time step (default: True)')
+    parser.add_argument('--deletepngs', type=int, default=1,
+                        help='delete the pngs for each time step (default: 1)')
     parser.add_argument('--w1', type=int, default=0.33,
                         help='weight for fitness function 1')
     parser.add_argument('--w2', type=int, default=0.33,
@@ -251,7 +274,7 @@ if __name__ == "__main__":
 
     if not gif_on:
         #no pngs to delete
-        delete_pngs = False
+        delete_pngs = 0
 
 
     game_grid = np.zeros((n,n))
@@ -273,9 +296,11 @@ if __name__ == "__main__":
     else:
         fitness_values = game_of_life(game_grid, time_steps, filename)
 
-    fitness = np.dot(fitness_values, fitness_weights)
-
-    print('Fitness: ',fitness)
+    # fitness_weights = test_fitness.get_weights()
+    #
+    # fitness = np.dot(fitness_values, fitness_weights)
+    #
+    # print('Fitness: ',fitness)
 
 
 

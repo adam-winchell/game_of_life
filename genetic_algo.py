@@ -12,13 +12,14 @@ import argparse
 ####################################
 # Global variables
 #used to avoid passing multiple args to multiprocess
-time_steps = 22
+time_steps = 11
 weights = test_fitness.get_weights()
 ####################################
 
 class GA:
-    def __init__(self, board_size=(50,50), ratio=0.2, fitness=0, board=[], gauss_init=False):
+    def __init__(self, board_size=(50,50), ratio=0.2, fitness=0, board=[], gauss_init=False, num_bits_to_flip=[1,2,3]):
         self.fitness = fitness
+        self.num_bits_to_flip = num_bits_to_flip
         if board == []:
             if gauss_init:
                 game_grid = np.zeros(board_size)
@@ -41,8 +42,10 @@ class GA:
         child = np.concatenate((chromosome1[:splt], chromosome2[splt:]))
 
         if np.array_equal(self.board, partner.board) or np.random.uniform(0,1) < 0.1:
-            idx = np.random.randint(len(child))
-            child[idx] = 0 if child[idx] else 1 #flip the bit
+            num = np.random.choice(self.num_bits_to_flip)
+            for _ in range(num):
+                idx = np.random.randint(len(child))
+                child[idx] = 0 if child[idx] else 1 #flip the bit
 
         child = np.reshape(child, self.board.shape)
         return GA(board=child)
@@ -55,7 +58,13 @@ def run_ca(agent):
     return agent
 
 
-def run_genetic_algorithm(max_num_generations=1000, fitness_threshold=1, population_size=124, top_k=5, num_to_return=5, save_every_n=10):
+def save_agents(agents, filename):
+    for num, r in enumerate(agents):
+        f = 'ga_results/'+filename + str(num)
+        with open(f, 'wb') as pFile:
+            pickle.dump(r.board, pFile)
+
+def run_genetic_algorithm(max_num_generations=1000, fitness_threshold=2, population_size=124, top_k=5, num_to_return=5, save_every_n=10):
     agents = [GA() for _ in range(population_size)]
 
     global weights
@@ -66,6 +75,10 @@ def run_genetic_algorithm(max_num_generations=1000, fitness_threshold=1, populat
             agents = pool.map(run_ca, agents)
 
         agents = sorted(agents, key=lambda x: x.fitness, reverse=True)
+
+        if g % save_every_n == 0:
+            save_agents(agents[:num_to_return], 'ga')
+
         agents = agents[:-int(top_k*(top_k-1))] #each of the top_k agents will breed with eachother, thus we will remove the bottom n*n-1 agents
 
         if agents[0].fitness >= fitness_threshold:  #TODO or the GA has stopped improving
@@ -81,15 +94,11 @@ def run_genetic_algorithm(max_num_generations=1000, fitness_threshold=1, populat
 
         print('Generation %s, best fitness %s'%(g, agents[0].fitness))
 
-        if g%save_every_n == 0:
-            for num, r in enumerate(agents[:num_to_return]):
-                filename = 'ga_results/ga'+str(num)
-                with open(filename, 'wb') as pFile:
-                    pickle.dump(r.board, pFile)
+
 
     return agents[:num_to_return]
 
-def ga_best_performers(max_num_generations=1000, fitness_threshold=1, top_k=10, num_to_return=5, ratio=0.1, save_every_n=10):
+def ga_best_performers(max_num_generations=1000, fitness_threshold=2, top_k=10, num_to_return=5, ratio=0.1, save_every_n=10):
     population_size = top_k**2 + top_k
     agents = [GA(ratio=ratio) for _ in range(population_size)]
 
@@ -98,6 +107,10 @@ def ga_best_performers(max_num_generations=1000, fitness_threshold=1, top_k=10, 
             agents = pool.map(run_ca, agents)
 
         agents = sorted(agents, key=lambda x: x.fitness, reverse=True)
+
+        if g % save_every_n == 0:
+            save_agents(agents[:num_to_return], 'bp')
+
         agents = agents[:top_k] #keep the top_k performers
 
         if agents[0].fitness >= fitness_threshold:  #TODO or the GA has stopped improving
@@ -112,24 +125,23 @@ def ga_best_performers(max_num_generations=1000, fitness_threshold=1, top_k=10, 
 
         print('Generation %s, best fitness %s'%(g, agents[0].fitness))
 
-        if g%save_every_n == 0:
-            for num, r in enumerate(agents[:num_to_return]):
-                filename = 'ga_results/bp' + str(num)
-                with open(filename, 'wb') as pFile:
-                    pickle.dump(r.board, pFile)
+
 
 
     return agents[:num_to_return]
 
-def ga_best_performers_with_noise(max_num_generations=1000, fitness_threshold=1, top_k=10, num_to_return=5, save_every_n=10):
+def ga_best_performers_with_noise(max_num_generations=1000, fitness_threshold=2, top_k=10, num_to_return=5, save_every_n=10, ratio=0.1):
     population_size = (2*top_k)**2 + top_k + top_k  #we will keep the top_k and a random number of k agents and each round we reproduce the the top_k + a random_k, everyone with eachother
-    agents = [GA() for _ in range(population_size)]
+    agents = [GA(ratio=ratio) for _ in range(population_size)]
 
     for g in range(max_num_generations):
         with Pool(processes=cpu_count()) as pool:
             agents = pool.map(run_ca, agents)
 
         agents = sorted(agents, key=lambda x: x.fitness, reverse=True)
+
+        if g % save_every_n == 0:
+            save_agents(agents[:num_to_return], 'bpn')
 
         if agents[0].fitness >= fitness_threshold:  #TODO or the GA has stopped improving
             break   #we are done
@@ -148,19 +160,13 @@ def ga_best_performers_with_noise(max_num_generations=1000, fitness_threshold=1,
 
         print('Generation %s, best fitness %s'%(g, agents[0].fitness))
 
-        if g%save_every_n == 0:
-            for num, r in enumerate(agents[:num_to_return]):
-                filename = 'ga_results/bpn' + str(num)
-                with open(filename, 'wb') as pFile:
-                    pickle.dump(r.board, pFile)
-
     return agents[:num_to_return]
 
 
 
-def ga_weighted_best_performers(max_num_generations=1000, fitness_threshold=1, num_parents=10, num_to_return=5, save_every_n=10):
+def ga_weighted_best_performers(max_num_generations=1000, fitness_threshold=2, num_parents=10, num_to_return=5, save_every_n=10, ratio=0.1):
     population_size = num_parents**2 + num_parents
-    agents = [GA() for _ in range(population_size)]
+    agents = [GA(ratio=0.1) for _ in range(population_size)]
 
 
     for g in range(max_num_generations):
@@ -168,6 +174,9 @@ def ga_weighted_best_performers(max_num_generations=1000, fitness_threshold=1, n
             agents = pool.map(run_ca, agents)
 
         agents = sorted(agents, key=lambda x: x.fitness, reverse=True)
+
+        if g % save_every_n == 0:
+            save_agents(agents[:num_to_return], 'wbp')
 
         if agents[0].fitness >= fitness_threshold:  #TODO or the GA has stopped improving
             break   #we are done
@@ -186,11 +195,7 @@ def ga_weighted_best_performers(max_num_generations=1000, fitness_threshold=1, n
 
         print('Generation %s, best fitness %s'%(g, agents[0].fitness))
 
-        if g%save_every_n == 0:
-            for num, r in enumerate(agents[:num_to_return]):
-                filename = 'ga_results/wbp' + str(num)
-                with open(filename, 'wb') as pFile:
-                    pickle.dump(r.board, pFile)
+
 
     return agents[:num_to_return]
 
@@ -211,7 +216,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Genetic Algorithm')
     parser.add_argument('--algo', type=str, default='ga',
-                        help='which ga algorithm to run  (default: ga)')
+                        help='which ga algorithm to run  (default: bp)')
 
     args = parser.parse_args()
 
@@ -220,15 +225,14 @@ if __name__ == '__main__':
     elif args.algo == 'wbp':
         result = ga_weighted_best_performers(max_num_generations=10000)
     elif args.algo == 'bp':
-        result = ga_best_performers(max_num_generations=10000, top_k=100)
+        result = ga_best_performers(max_num_generations=10000, top_k=15)
     elif args.algo == 'bpn':
         result = ga_best_performers_with_noise(max_num_generations=10000)
 
+    #TODO get graph of fitness over time
 
-    for num, r in enumerate(result):
-        filename = 'ga_results/'+str(num)
-        with open(filename, 'wb') as pFile:
-            pickle.dump(r.board, pFile)
+    save_agents(result, args.algo)
+
 
 
 

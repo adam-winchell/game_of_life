@@ -14,8 +14,7 @@ def get_weights():
 	for filename in files:
 		splt = filename.split('_')
 
-		fitness_values = ca.main(time_steps=(int(splt[2]) * 2 + 2), filename=filename, gif_on=False, seed=filename,
-								 individual_fitness=True)
+		fitness_values = ca.main(time_steps=(int(splt[2]) * 2 + 2), filename=filename, gif_on=False, seed=filename)
 		fitnesses.append(fitness_values)
 
 	fitnesses = np.array(fitnesses)
@@ -41,10 +40,10 @@ if __name__ == "__main__":
 		splt = filename.split('_')
 		# print('**********')
 		# print(filename)
-		fitness_values = ca.main(time_steps=(int(splt[2])*2 + 2), filename=filename,gif_on=False, seed=filename, individual_fitness=True)
+		fitness_values = ca.main(time_steps=(int(splt[2])*2 + 2), filename=filename,gif_on=False, seed=filename)
 		fitnesses.append(fitness_values)
+		# print(fitness_values)
 		# print(np.dot(fitness_values, weights))
-
 
 	fitnesses = np.array(fitnesses)
 
@@ -59,7 +58,8 @@ if __name__ == "__main__":
 	for filename, fitness in zip(files, fitnesses):
 		print('**********')
 		print(filename)
-		print(np.dot(fitness, weights))
+		# print(np.dot(fitness, weights))
+		print(fitness)
 		total_fitness.append(np.dot(fitness, weights))
 
 	plt.hist(total_fitness, bins=30)
