@@ -4,7 +4,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 def get_weights():
-	#This function assumes that f0 get 0.5 weight and everything else shares weight from the remaining 0.5
 	files = []
 	for file in os.listdir("seeds/"):
 		if 'oscillator' in file:
@@ -19,12 +18,11 @@ def get_weights():
 
 	fitnesses = np.array(fitnesses)
 
-	w0 = 0.5
-	weights = [w0]  # w0 is 0.5 because f0 is a necessary condition for an oscillator so it will be priortized
+	weights = []
 
-	for i in range(1, fitnesses.shape[1]):
+	for i in range(fitnesses.shape[1]):
 		top = np.max(fitnesses[:, i])
-		weights.append((1 - w0) / ((fitnesses.shape[1] - 1) * top))
+		weights.append(1 / (fitnesses.shape[1] * top))
 
 	return weights
 
@@ -58,8 +56,8 @@ if __name__ == "__main__":
 	for filename, fitness in zip(files, fitnesses):
 		print('**********')
 		print(filename)
-		# print(np.dot(fitness, weights))
-		print(fitness)
+		print(np.dot(fitness, weights))
+		# print(fitness)
 		total_fitness.append(np.dot(fitness, weights))
 
 	plt.hist(total_fitness, bins=30)
