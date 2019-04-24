@@ -39,16 +39,24 @@ class GA:
         chromosome1 = np.ravel(self.board)
         chromosome2 = np.ravel(partner.board)
         splt = np.random.randint(len(chromosome1))
-        child = np.concatenate((chromosome1[:splt], chromosome2[splt:]))
+        child1 = np.concatenate((chromosome1[:splt], chromosome2[splt:]))
+        child2 = np.concatenate((chromosome2[:splt], chromosome1[splt:]))
 
         if np.array_equal(self.board, partner.board) or np.random.uniform(0,1) < 0.1:
             num = np.random.choice(self.num_bits_to_flip)
             for _ in range(num):
-                idx = np.random.randint(len(child))
-                child[idx] = 0 if child[idx] else 1 #flip the bit
+                idx = np.random.randint(len(child1))
+                child1[idx] = 0 if child1[idx] else 1 #flip the bit
 
-        child = np.reshape(child, self.board.shape)
-        return GA(board=child)
+        if np.array_equal(self.board, partner.board) or np.random.uniform(0,1) < 0.1:
+            num = np.random.choice(self.num_bits_to_flip)
+            for _ in range(num):
+                idx = np.random.randint(len(child2))
+                child2[idx] = 0 if child2[idx] else 1 #flip the bit
+
+        child1 = np.reshape(child1, self.board.shape)
+        child2 = np.reshape(child2, self.board.shape)
+        return [GA(board=child1), GA(board=child2)]
 
 
 def run_ca(agent):
@@ -88,7 +96,7 @@ def run_genetic_algorithm(max_num_generations=1000, fitness_threshold=2, populat
         for i in range(top_k):
             for j in range(top_k):
                 if i != j:
-                    children.append(agents[i].crossover(agents[j]))
+                    children.extend(agents[i].crossover(agents[j]))
 
         agents.extend(children)
 
@@ -119,7 +127,7 @@ def ga_best_performers(max_num_generations=1000, fitness_threshold=2, top_k=10, 
         children = []
         for i in range(top_k):
             for j in range(top_k):
-                    children.append(agents[i].crossover(agents[j]))
+                    children.extend(agents[i].crossover(agents[j]))
 
         agents.extend(children)
 
@@ -154,7 +162,7 @@ def ga_best_performers_with_noise(max_num_generations=1000, fitness_threshold=2,
         children = []
         for i in range(len(agents)):
             for j in range(len(agents)):
-                    children.append(agents[i].crossover(agents[j]))
+                    children.extend(agents[i].crossover(agents[j]))
 
         agents.extend(children)
 
@@ -188,7 +196,7 @@ def ga_weighted_best_performers(max_num_generations=1000, fitness_threshold=2, n
         children = []
         for i in range(len(agents)):
             for j in range(len(agents)):
-                    children.append(agents[i].crossover(agents[j]))
+                    children.extend(agents[i].crossover(agents[j]))
 
         agents = [agent for agent in agents]
         agents.extend(children)
