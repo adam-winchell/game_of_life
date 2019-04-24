@@ -10,6 +10,7 @@ from collections import defaultdict
 import test_fitness
 
 def fitness(data, desired_period):
+    desired_period = int(desired_period)
     result = deepcopy(data[0])
     f1, f2 , f3 = -1, -1, -1
 
@@ -46,13 +47,18 @@ def fitness(data, desired_period):
 
     f6 = 1 if bound_box == 0 else 1 / bound_box
 
-
-
-    unique_frames = set()
-    for d in range(len(data)):
-        unique_frames.add(tuple(data[d].ravel()))
-
-    f7 = (2*(len(unique_frames)+1)) / len(data) if (2*(len(unique_frames)+1)) / len(data) <= 1 else len(data)/(2*(len(unique_frames)+1))
+    num_proper_frames = 0
+    for d in range(len(data) - desired_period):
+        proper_frame = False
+        if np.array_equal(data[d],data[d+desired_period]):
+            proper_frame = True
+            for i in range(1, desired_period):
+                if np.array_equal(data[d],data[d+i]):
+                    proper_frame = False
+                    break
+        if proper_frame:
+            num_proper_frames += 1
+    f7 = num_proper_frames/(len(data)-desired_period)
 
 
     add1 = np.vectorize(lambda x: x+1 if x > 0 else 0)
@@ -296,6 +302,7 @@ if __name__ == "__main__":
     else:
         fitness_values = game_of_life(game_grid, time_steps, filename)
 
+    print(fitness_values)
     # fitness_weights = test_fitness.get_weights()
     #
     # fitness = np.dot(fitness_values, fitness_weights)
