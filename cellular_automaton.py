@@ -9,7 +9,8 @@ from scipy.spatial.distance import pdist
 from collections import defaultdict
 import test_fitness
 
-def fitness(data, desired_period):
+def fitness(data, desired_period,funcs=['f1','f2','f6','f7']): #pass dummy values everywhereee
+    # print(funcs)
     desired_period = int(desired_period)
     result = deepcopy(data[0])
     f1, f2 , f3 = -1, -1, -1
@@ -103,9 +104,15 @@ def fitness(data, desired_period):
     f2 = max(f2, 0)
     # f3 = max(f3, 0)
 
-
-    f = [f1, f2, f6, f7]
+    # f = [f1,f2,f6]
     # print(f)
+
+    func_dict = {'f1':f1,'f2':f2,'f6':f6,'f7':f7}
+
+    f = [func_dict[i] for i in funcs]
+
+    # print(f)
+
 
     return f
 
@@ -142,7 +149,7 @@ def plot_grid(game_grid, filename):
     #plt.close()
     return imageio.imread(filename+'.png')
 
-def game_of_life(game_grid, time_steps):
+def game_of_life(game_grid, time_steps,funcs=['f1','f2','f6','f7']):
 
     cells_to_update = []
     fitness_frames = []
@@ -167,7 +174,7 @@ def game_of_life(game_grid, time_steps):
         game_grid = update_grid
         cells_to_update = list(temp)
 
-    return fitness(fitness_frames, desired_period)
+    return fitness(fitness_frames, desired_period,funcs=funcs)
 
 def game_of_life_gif(game_grid, time_steps, filename, delete_pngs):
 
@@ -209,9 +216,9 @@ def game_of_life_gif(game_grid, time_steps, filename, delete_pngs):
     # with open('frames.p','wb') as pFile:
         # pickle.dump(fitness_frames,pFile)
 
-    return fitness(fitness_frames, desired_period)
+    return fitness(fitness_frames, desired_period,)
 
-def main(n=50, time_steps=3, filename='glider', delete_pngs=True, gif_on=False, seed='glider.p'):
+def main(n=50, time_steps=3, filename='glider', delete_pngs=True, gif_on=False, seed='glider.p',funcs=['f1','f2','f6','f7']):
     desired_period = (time_steps-2)/2
     filename = 'oscillators/' + filename
 
@@ -233,15 +240,15 @@ def main(n=50, time_steps=3, filename='glider', delete_pngs=True, gif_on=False, 
 
         fitness_values = game_of_life_gif(game_grid, time_steps, filename, delete_pngs)
     else:
-        fitness_values = game_of_life(game_grid, time_steps)
+        fitness_values = game_of_life(game_grid, time_steps,funcs=funcs)
 
 
 
     return fitness_values
 
 
-def run_for_ga(game_grid, fitness_weights, time_steps=3 ):  #TODO find better weights, f3 can be maximized when life_ratio is 0.05 which is bad
-    fitness_values = game_of_life(game_grid, time_steps)
+def run_for_ga(game_grid, fitness_weights, time_steps=3,funcs=['f1','f2','f6','f7']):  #TODO find better weights, f3 can be maximized when life_ratio is 0.05 which is bad
+    fitness_values = game_of_life(game_grid, time_steps,funcs=funcs)
 
     return np.dot(fitness_weights, fitness_values)
 

@@ -3,7 +3,7 @@ import cellular_automaton as ca
 import numpy as np
 import matplotlib.pyplot as plt
 
-def get_weights():
+def get_weights(funcs=['f1','f2','f6','f7']): #added dummy argument for results
 	files = []
 	for file in os.listdir("seeds/"):
 		if 'oscillator' in file:
@@ -13,7 +13,7 @@ def get_weights():
 	for filename in files:
 		splt = filename.split('_')
 
-		fitness_values = ca.main(time_steps=(int(splt[2]) * 2 + 2), filename=filename, gif_on=False, seed=filename)
+		fitness_values = ca.main(time_steps=(int(splt[2]) * 2 + 2), filename=filename, gif_on=False, seed=filename,funcs=funcs)
 		fitnesses.append(fitness_values)
 
 	fitnesses = np.array(fitnesses)
