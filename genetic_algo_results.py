@@ -62,7 +62,7 @@ class GA:
 
 def run_ca(agent,funcs=['f1','f2','f6','f7'],weights=[]):
     if len(weights) == 0:
-        print('here')
+        # print('here')
         weights = [1/len(funcs) for i in funcs]
 
 
@@ -152,7 +152,7 @@ def ga_best_performers_with_noise(weights,max_num_generations=1000, fitness_thre
     run_results = partial(run_ca,funcs=funcs,weights=weights)
     for g in range(max_num_generations):
         with Pool(processes=cpu_count()) as pool:
-            agents = pool.map(run_ca, agents)
+            agents = pool.map(run_results, agents)
 
         agents = sorted(agents, key=lambda x: x.fitness, reverse=True)
 
@@ -256,7 +256,8 @@ if __name__ == '__main__':
 
     solo = [['f1'],['f2'],['f6'],['f7']]
     leave_one_out = [['f1','f2','f7'],['f1','f2','f6'],['f1','f6','f7'],['f2','f6','f7']]
-    populations = [ga_weighted_best_performers,ga_best_performers,ga_best_performers_with_noise]
+    # populations = [ga_weighted_best_performers,ga_best_performers,ga_best_performers_with_noise]
+    populations = [ga_best_performers_with_noise]
 
     funcs_test = solo + leave_one_out
     for item in funcs_test:
